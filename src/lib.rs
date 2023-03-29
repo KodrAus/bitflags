@@ -436,6 +436,11 @@ pub mod __private {
     pub use crate::{external::*, traits::*};
 
     pub use core;
+
+    #[cfg(feature = "serde")]
+    pub use serde;
+    #[cfg(feature = "zerocopy_0_6")]
+    pub use zerocopy;
 }
 
 /*
