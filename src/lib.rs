@@ -608,6 +608,8 @@ macro_rules! bitflags {
 /// })
 /// ```
 ///
+/// The final `_ => default_result` arm is required, otherwise the macro will fail to compile.
+///
 /// # Examples
 ///
 /// ```rust
@@ -654,22 +656,50 @@ macro_rules! bitflags {
 #[macro_export]
 macro_rules! bitflags_match {
     ($operation:expr, {
-        $( $pattern:expr => $result:expr, )*
-        _ => $default:expr
+        $($t:tt)*
     }) => {
+        // Expand to a closure so we can use `return`
+        // This makes it possible to apply attributes to the "match arms"
+        (|| {
+            $crate::__bitflags_match!($operation, { $($t)* })
+        })()
+    };
+}
+
+/// Expand the `bitflags_match` macro
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __bitflags_match {
+    // Eat an optional `,` following a block match arm
+    ($operation:expr, { $pattern:expr => { $($body:tt)* } , $($t:tt)+ }) => {
+        $crate::__bitflags_match!($operation, { $pattern => { $($body)* } $($t)+ })
+    };
+    // Expand a block match arm `A => { .. }`
+    ($operation:expr, { $pattern:expr => { $($body:tt)* } $($t:tt)+ }) => {
         {
-            // Iterate over the patterns and check for matches
-            $(
-                if $operation == $pattern {
-                   $result
-                } else
-            )*
-           {
-             // Return default result if no match was found
-             $default
-           }
+            if $operation == $pattern {
+                return {
+                    $($body)*
+                };
+            }
+
+            $crate::__bitflags_match!($operation, { $($t)+ })
         }
     };
+    // Expand an expression match arm `A => x,`
+    ($operation:expr, { $pattern:expr => $body:expr , $($t:tt)+ }) => {
+        {
+            if $operation == $pattern {
+                return $body;
+            }
+
+            $crate::__bitflags_match!($operation, { $($t)+ })
+        }
+    };
+    // Expand the default case
+    ($operation:expr, { _ => $default:expr $(,)? }) => {
+        $default
+    }
 }
 
 /// Implement functions on bitflags types.

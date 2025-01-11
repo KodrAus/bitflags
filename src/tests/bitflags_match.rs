@@ -1,5 +1,3 @@
-use super::*;
-
 bitflags! {
     #[derive(PartialEq)]
     struct Flags: u8 {
@@ -13,7 +11,7 @@ bitflags! {
 fn flag_to_string(flag: Flags) -> String {
     bitflags_match!(flag, {
         Flags::A => "A".to_string(),
-        Flags::B => "B".to_string(),
+        Flags::B => { "B".to_string() }
         Flags::C => "C".to_string(),
         Flags::D => "D".to_string(),
         Flags::A | Flags::B => "A or B".to_string(),
@@ -23,7 +21,7 @@ fn flag_to_string(flag: Flags) -> String {
         Flags::A & Flags::B & Flags::C => "A and B and C".to_string(),
         Flags::A ^ Flags::B ^ Flags::C => "A xor B xor C".to_string(),
         Flags::A | Flags::B | Flags::C | Flags::D => "All flags".to_string(),
-        _ => "Unknown combination".to_string()
+        _ => "Unknown combination".to_string(),
     })
 }
 
